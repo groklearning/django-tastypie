@@ -486,6 +486,7 @@ class Resource(six.with_metaclass(DeclarativeMetaclass)):
 
         # All clear. Process the request.
         request = convert_post_to_put(request)
+        self.log_throttled_access(request)
         response = method(request, **kwargs)
 
         # Add the throttled request.
