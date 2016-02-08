@@ -244,8 +244,14 @@ class Resource(six.with_metaclass(DeclarativeMetaclass)):
                 data = {"error": sanitize(e.args[0]) if getattr(e, 'args') else ''}
                 return self.error_response(request, data, response_class=http.HttpBadRequest)
             except ValidationError as e:
-                data = {"error": sanitize(e.messages)}
-                return self.error_response(request, data, response_class=http.HttpBadRequest)
+                if hasattr(e, 'error_dict'):
+                    error_dict = e.message_dict
+                else:
+                    error_dict = e.update_error_dict({})
+                errors = {self._meta.resource_name: error_dict}
+                desired_format = self.determine_format(request)
+                content = self.serialize(request, errors, desired_format)
+                return http.HttpBadRequest(content, content_type=build_content_type(desired_format))
             except Exception as e:
                 # Prevent muting non-django's exceptions
                 # i.e. RequestException from 'requests' library
