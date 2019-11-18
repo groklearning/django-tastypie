@@ -70,10 +70,14 @@ class FormValidation(Validation):
             # to *not* use the data in the bundle, since it is a URI to a
             # resource.  Instead, use the output of model_to_dict for
             # validation, since that is already properly hydrated.
-            for field in bundle.obj._meta.fields:
-                if field.name in bundle.data:
-                    if not isinstance(field, RelatedField):
-                        kwargs['data'][field.name] = bundle.data[field.name]
+            fields_by_name = {field.name: field for field in bundle.obj._meta.fields}
+            for field_name in bundle.data:
+                if field_name in fields_by_name:
+                    if not isinstance(fields_by_name[field_name], RelatedField):
+                        kwargs['data'][field_name] = bundle.data[field_name]
+                else:
+                    kwargs['data'][field_name] = bundle.data[field_name]
+
         else:
             kwargs['data'].update(data)
         return kwargs
